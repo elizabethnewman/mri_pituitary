@@ -81,9 +81,7 @@ def extract_data(net: Module, attr: str = 'data') -> (torch.Tensor, Tuple, Tuple
     """
     theta = torch.empty(0)
     for name, w in net.named_parameters():
-        if getattr(w, attr) is None:
-            w = torch.zeros_like(w.data)
-        else:
+        if getattr(w, attr) is not None:
             w = getattr(w, attr)
 
         theta = torch.cat((theta, w.reshape(-1)))
