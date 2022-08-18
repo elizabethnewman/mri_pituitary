@@ -79,14 +79,14 @@ def extract_data(net: Module, attr: str = 'data') -> (torch.Tensor, Tuple, Tuple
     """
     Extract data stored in specific attribute and store as 1D array
     """
-    theta = torch.empty(0)
+    theta = ()
     for name, w in net.named_parameters():
         if getattr(w, attr) is not None:
             w = getattr(w, attr)
 
-        theta = torch.cat((theta, w.reshape(-1)))
+        theta += (w.reshape(-1),)
 
-    return theta
+    return torch.cat(theta)
 
 
 def insert_data(net: Module, theta: torch.Tensor, attr: str = 'data') -> None:
