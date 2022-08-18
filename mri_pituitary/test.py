@@ -68,7 +68,7 @@ f_opt = f.evaluate(tmp, x, y)
 
 none_grad(net)
 n_params = get_num_parameters(net)
-opt = LBFGS(n_params)
+opt = LBFGS(n_params, m=100)
 
 tmp = opt.solve(f, p, x, y)
 
