@@ -88,14 +88,15 @@ class UNet(nn.Module):
                  dec_channels=(512, 256, 128, 64),
                  intrinsic_channels=1024,
                  num_classes=3,
-                 resize=True):
+                 resize=True, device=None, dtype=None):
+        factory_kwargs = {'device': device, 'dtype': dtype}
         super(UNet, self).__init__()
-        self.encoder = Encoder(enc_channels)
-        self.decoder = Decoder((intrinsic_channels,) + dec_channels)
+        self.encoder = Encoder(enc_channels, **factory_kwargs)
+        self.decoder = Decoder((intrinsic_channels,) + dec_channels, **factory_kwargs)
 
         # intrinsic layers
-        self.conv = Conv2dReLU(enc_channels[-1], intrinsic_channels, device=device)
-        self.output_map = nn.Conv2d(dec_channels[-1], num_classes, kernel_size=(1, 1))
+        self.conv = Conv2dReLU(enc_channels[-1], intrinsic_channels, **factory_kwargs)
+        self.output_map = nn.Conv2d(dec_channels[-1], num_classes, kernel_size=(1, 1), **factory_kwargs)
 
         # final resize
         self.resize = resize
