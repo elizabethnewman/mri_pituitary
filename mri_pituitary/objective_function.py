@@ -1,5 +1,5 @@
 import torch
-from utils import extract_data, insert_data, none_grad
+from mri_pituitary.utils import extract_data, insert_data, none_grad
 
 
 class ObjectiveFunction:
