@@ -1,7 +1,8 @@
 import torch
 import math
+from torch import Tensor
 from torch.nn import Module
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 
 def setup_data_splits(images, masks, n=80, p=0.8, seed=42, dtype=None, device=None):
@@ -61,7 +62,7 @@ def module_getattr(obj: Module, names: Tuple or List or str):
         return module_getattr(getattr(obj, names[0]), names[1:])
 
 
-def module_setattr(obj: Module, names: Tuple or List, val: Tensor):
+def module_setattr(obj: Module, names: Tuple or List, val: Union[Tensor, None]):
     r"""
     Set specific attribute of module at any level
     """
@@ -100,3 +101,25 @@ def insert_data(net: Module, theta: torch.Tensor, attr: str = 'data') -> None:
         n = w.numel()
         module_setattr(net, name_split + [attr], theta[count:count + n].reshape(w.shape))
         count += n
+
+
+def none_grad(net: Module) -> None:
+    """
+    Insert 1D array of data into specific attribute
+    """
+    count = 0
+    for name, w in net.named_parameters():
+        name_split = name.split('.')
+        n = w.numel()
+        module_setattr(net, name_split + ['grad'], None)
+        count += n
+
+
+def get_num_parameters(net: Module) -> None:
+    """
+    Insert 1D array of data into specific attribute
+    """
+    count = 0
+    for p in net.parameters():
+        count += p.numel()
+    return count
