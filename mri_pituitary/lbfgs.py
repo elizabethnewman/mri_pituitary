@@ -69,22 +69,23 @@ class LBFGS:
             # perform line search
             alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
 
-            if alpha == 0 or alpha is None:
-                print('HERE')
-                # use Armijo search
-                k = 0
-                alpha2 = 1
-                gamma = 1e-3
-                tau = torch.dot(d.view(-1), df.view(-1))
-                while k < self.ls.max_iter:
-                    f2 = obj_fctn.evaluate(p + alpha2 * df, x, y)[0]
-
-                    if f2 <= f + gamma * tau:
-                        break
-
-                    alpha2 *= 0.5
-                    k += 1
-                alpha = alpha2
+            # if alpha == 0 or alpha is None:
+            #     print('HERE')
+            #     # use Armijo search
+            #     k = 0
+            #     alpha2 = 1
+            #     gamma = 1e-3
+            #     tau = torch.dot(d.view(-1), df.view(-1))
+            #     while k < self.ls.max_iter:
+            #         f2 = obj_fctn.evaluate(p + alpha2 * df, x, y)[0]
+            #
+            #         if f2 <= f + gamma * tau:
+            #             break
+            #
+            #         alpha2 *= 0.5
+            #         k += 1
+            #     alpha = alpha2
+            
 
             p += alpha * d
 
