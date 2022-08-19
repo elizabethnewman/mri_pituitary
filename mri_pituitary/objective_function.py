@@ -15,17 +15,18 @@ class ObjectiveFunction:
         (Jc, dJc) = (None, None)
 
         # insert parameters
+        none_grad(self.net)
         insert_data(self.net, p)
         if do_gradient:
             self.net.train()
-            none_grad(self.net)
             out = self.net(x)
             misfit = self.loss(out, y)
             misfit.backward()
 
             g = extract_data(self.net, 'grad')
+            none_grad(self.net)
             reg = 0.5 * self.alpha * torch.norm(p) ** 2
-            dreg = self.alpha * g
+            dreg = self.alpha * p
 
             Jc = misfit + reg
             dJc = g + dreg

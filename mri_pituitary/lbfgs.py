@@ -16,8 +16,8 @@ class LBFGS:
         self.k = 0
         self.gamma = 1.0
         self.alpha = 1.0
-        self.atol = 1e-7
-        self.rtol = 1e-7
+        self.atol = 1e-8
+        self.rtol = 1e-8
         self.max_iter = 100
         self.ls = WolfeLineSearch()
 

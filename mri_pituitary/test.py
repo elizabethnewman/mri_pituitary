@@ -18,7 +18,7 @@ net = nn.Linear(m, n)
 loss = nn.MSELoss()
 
 # create objective function
-alpha = 1e-2
+alpha = 0
 f = ObjectiveFunction(net, loss, alpha=alpha)
 
 # check evaluation
