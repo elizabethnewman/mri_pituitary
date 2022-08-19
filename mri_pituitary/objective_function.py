@@ -56,3 +56,49 @@ class ObjectiveFunction:
 
         return values
 
+
+if __name__ == '__main__':
+    import torch.nn as nn
+    from mri_pituitary.utils import convert_to_base
+    # do gradient check
+
+    # create data
+    N, m, n = 100, 3, 4
+    x = torch.randn(N, m)
+    y = torch.randn(N, n)
+
+    # create network
+    net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
+    p = extract_data(net, 'data')
+
+    # create loss
+    loss = nn.MSELoss()
+
+    alpha = 1e0
+    f = ObjectiveFunction(net, loss, alpha=alpha)
+
+    f0, df0 = f.evaluate(p, x, y, do_gradient=True)
+
+    d = torch.randn_like(p)
+    dfd = torch.dot(df0.view(-1), d.view(-1))
+
+    N = 15
+
+    headers = ('h', 'E0', 'E1')
+    print(('{:<20s}' * len(headers)).format(*headers))
+
+    err0 = []
+    err1 = []
+    for k in range(N):
+        h = 2 ** (-k)
+        f1 = f.evaluate(p + h * d, x, y, do_gradient=False)[0]
+
+        err0.append(torch.norm(f0 - f1))
+        err1.append(torch.norm(f0 + h * dfd - f1))
+
+        printouts = convert_to_base((err0[-1], err1[-1]))
+        print(((1 + len(printouts) // 2) * '%0.2f x 2^(%0.2d)\t\t') % ((1, -k) + printouts))
+
+
+
+
