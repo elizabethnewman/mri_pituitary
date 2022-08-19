@@ -19,7 +19,8 @@ class LBFGS:
         self.atol = 1e-12
         self.rtol = 1e-12
         self.max_iter = 100
-        self.ls = WolfeLineSearch()
+        # self.ls = WolfeLineSearch()
+        self.ls = ArmijoLineSearch()
         self.comp_metrics = True
 
     def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
@@ -43,7 +44,7 @@ class LBFGS:
         nrmdf0 = torch.norm(df0).item()
         p_old, f, df = p.clone(), f0.clone(), df0.clone()
         f_old, df_old = f.clone(), df.clone()
-        alpha = 0
+        alpha = 1.0
 
         dfnrm = torch.norm(df0).item()
         values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha]
@@ -67,14 +68,10 @@ class LBFGS:
                 d = -df
 
             # perform line search
-            alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
+            # alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
+            alpha = self.ls.search(obj_fctn, p, d, f, df, x, y, alpha)
 
-            # if alpha == 0 or alpha is None:
-            #     print('HERE')
-            #     # use Armijo search
-
-
-
+            # update parameters
             p += alpha * d
 
             # evaluate
@@ -123,7 +120,7 @@ class ArmijoLineSearch:
         self.max_iter = 20
         self.gamma = 1e-3
 
-    def serach(self, obj_fctn, p, d, f, df, x, y, alpha=1.0):
+    def search(self, obj_fctn, p, d, f, df, x, y, alpha=1.0):
 
         k = 0
         tau = torch.dot(d.view(-1), df.view(-1))

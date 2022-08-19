@@ -63,20 +63,32 @@ if __name__ == '__main__':
     # do gradient check
 
     # create data
-    N, m, n = 100, 3, 4
-    x = torch.randn(N, m)
-    y = torch.randn(N, n)
+    # N, m, n = 100, 3, 4
+    # x = torch.randn(N, m)
+    #
+    # y = torch.randn(N, n)
+    # net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
+    # loss = nn.MSELoss()
+    #
+    # y = torch.randint(3, (N,))
+    # net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, 3))
+    # loss = nn.CrossEntropyLoss()
+    #
+
+    N, C, m, n = 100, 2, 16, 16
+    x = torch.randn(N, C, m, n)
+
+    y = torch.randn(N, 3, 10, 10)
+    net = nn.Sequential(nn.Conv2d(C, 5, (3, 3)), nn.ReLU(), nn.Conv2d(5, 3, (5, 5)))
+    z = net(x)
+    print(z.shape)
+    loss = nn.CrossEntropyLoss(weight=torch.tensor((0, 1, 1e-2)))
 
     # create network
-    net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
-    p = extract_data(net, 'data')
-
-    # create loss
-    loss = nn.MSELoss()
-
-    alpha = 1e0
+    alpha = 1e-4
     f = ObjectiveFunction(net, loss, alpha=alpha)
 
+    p = extract_data(net, 'data')
     f0, df0 = f.evaluate(p, x, y, do_gradient=True)
 
     d = torch.randn_like(p)
