@@ -1,10 +1,30 @@
 import torch
 
 
+def compute_metrics(images, masks, net, loss):
+    # output features
+    out = net(images)
+
+    # loss
+    Jc = loss(out, masks)
+
+    # accuracy
+    predicted_labels = get_labels(out)
+    true_labels = get_labels(masks)
+    acc = 100 * (predicted_labels == true_labels).sum() / predicted_labels.numel()
+
+    # dice values
+    dice_values = []
+    for k in range(masks.shape[1]):
+        dice_values.append(get_dice(predicted_labels, true_labels, k))
+
+    return Jc.item(), acc.item(), dice_values
+
+
 def get_dice(X: torch.Tensor, Y: torch.Tensor, k: int):
     num = 2 * ((X == k) * (Y == k)).sum()
     den = (X == k).sum() + (Y == k).sum()
-    return num / max(den, 1)
+    return num.item() / max(den.item(), 1)
 
 
 def get_labels(X: torch.Tensor):

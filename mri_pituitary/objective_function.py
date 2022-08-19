@@ -1,6 +1,6 @@
 import torch
 from mri_pituitary.utils import extract_data, insert_data, none_data
-from mri_pituitary.train import compute_metrics
+from mri_pituitary.metrics import compute_metrics
 
 
 class ObjectiveFunction:
@@ -45,14 +45,11 @@ class ObjectiveFunction:
         insert_data(self.net, p)
         with torch.no_grad():
             Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self.net, self.loss)
-            values = [Jc_train, acc_train,
-                      dice_train[0].item(), dice_train[1].item(), dice_train[2].item(), dice_train[3].item(),
-                      dice_train.mean().item()]
+            values = [Jc_train, acc_train] + dice_train + [sum(dice_train) / len(dice_train)] + [0]
 
             if images_val is not None and masks_val is not None:
                 Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self.net, self.loss)
-                values += [Jc_val, acc_val, dice_val[0].item(), dice_val[1].item(), dice_val[2].item(), dice_val[3].item(),
-                           dice_val.mean().item()]
+                values += [Jc_val, acc_val] + dice_val + [sum(dice_val) / len(dice_val)]
 
         return values
 
@@ -66,23 +63,21 @@ if __name__ == '__main__':
     # N, m, n = 100, 3, 4
     # x = torch.randn(N, m)
     #
-    # y = torch.randn(N, n)
-    # net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
-    # loss = nn.MSELoss()
+    y = torch.randn(N, n)
+    net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
+    loss = nn.MSELoss()
     #
     # y = torch.randint(3, (N,))
     # net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, 3))
     # loss = nn.CrossEntropyLoss()
     #
-
-    N, C, m, n = 100, 2, 16, 16
-    x = torch.randn(N, C, m, n)
-
-    y = torch.randn(N, 3, 10, 10)
-    net = nn.Sequential(nn.Conv2d(C, 5, (3, 3)), nn.ReLU(), nn.Conv2d(5, 3, (5, 5)))
-    z = net(x)
-    print(z.shape)
-    loss = nn.CrossEntropyLoss(weight=torch.tensor((0, 1, 1e-2)))
+    #
+    # N, C, m, n = 100, 2, 16, 16
+    # x = torch.randn(N, C, m, n)
+    #
+    # y = torch.randn(N, 3, 10, 10)
+    # net = nn.Sequential(nn.Conv2d(C, 5, (3, 3)), nn.ReLU(), nn.Conv2d(5, 3, (5, 5)))
+    # loss = nn.CrossEntropyLoss(weight=torch.tensor((0, 1, 1e-2)))
 
     # create network
     alpha = 1e-4

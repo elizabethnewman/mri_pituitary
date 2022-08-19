@@ -68,7 +68,7 @@ class LBFGS:
                 d = -df
 
             # perform line search
-            alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
+            alpha = self.ls.search(obj_fctn, p, d, x, y)
             # alpha, k = self.ls.search(obj_fctn, p, d, f, df, x, y, alpha)
 
             # update parameters
@@ -145,9 +145,12 @@ class WolfeLineSearch:
         self.alpha_max = 5
         self.max_zoom_iter = 50
 
-    def search(self, obj_fctn, p, d, x, y, alphac=1.0):
+    def search(self, obj_fctn, p, d, x, y, alphac=None):
         phi0, dphi0 = self.phi(obj_fctn, p, d, x, y, 0, do_gradient=True)
         alpha_old, phi_old, dphi_old = 0, phi0.clone(), dphi0.clone()
+
+        if alphac is None or alphac == 0:
+            alphac = 0.5 * self.alpha_max
 
         iter = 0
         while iter < self.max_iter:
