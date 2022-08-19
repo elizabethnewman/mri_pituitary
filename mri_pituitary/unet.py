@@ -13,7 +13,7 @@ class Conv2dReLU(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels, out_channels1, kernel_size, padding=padding, **kwargs)
         self.conv2 = nn.Conv2d(out_channels1, out_channels2, kernel_size, padding=padding, **kwargs)
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
 
     def forward(self, x):
         x = self.conv1(x)
