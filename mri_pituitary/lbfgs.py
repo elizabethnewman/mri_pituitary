@@ -19,8 +19,8 @@ class LBFGS:
         self.atol = 1e-12
         self.rtol = 1e-12
         self.max_iter = 100
-        # self.ls = WolfeLineSearch()
-        self.ls = ArmijoLineSearch()
+        self.ls = WolfeLineSearch()
+        # self.ls = ArmijoLineSearch()
         self.comp_metrics = True
 
     def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
@@ -68,8 +68,8 @@ class LBFGS:
                 d = -df
 
             # perform line search
-            # alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
-            alpha = self.ls.search(obj_fctn, p, d, f, df, x, y, alpha)
+            alpha = self.ls.search(obj_fctn, p, d, x, y, alpha)
+            # alpha, k = self.ls.search(obj_fctn, p, d, f, df, x, y, alpha)
 
             # update parameters
             p += alpha * d
@@ -133,7 +133,7 @@ class ArmijoLineSearch:
             alpha *= 0.5
             k += 1
 
-        return alpha
+        return alpha, k
 
 
 class WolfeLineSearch:
