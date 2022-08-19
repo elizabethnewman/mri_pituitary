@@ -26,10 +26,10 @@ class LBFGS:
     def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
 
         info = dict()
-        info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha')
+        info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha', 'ls_iter', 'zoom_iter')
         info['header'] += obj_fctn.info['header']
 
-        info['frmt'] = '{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}'
+        info['frmt'] = '{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15d}{:<15d}'
         info['frmt'] += obj_fctn.info['frmt']
 
         if x_val is not None and y_val is not None:
@@ -49,7 +49,7 @@ class LBFGS:
         alpha = 1.0
 
         dfnrm = torch.norm(df0).item()
-        values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha]
+        values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha, 0, 0]
         values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
         print(info['frmt'].format(*values))
 
@@ -70,7 +70,7 @@ class LBFGS:
                 d = -df
 
             # perform line search
-            alpha = self.ls.search(obj_fctn, p, d, x, y)
+            alpha, ls_iter, zoom_iter = self.ls.search(obj_fctn, p, d, x, y)
             # alpha, k = self.ls.search(obj_fctn, p, d, f, df, x, y, alpha)
 
             # update parameters
@@ -86,7 +86,7 @@ class LBFGS:
 
             self.k += 1
             dfnrm = torch.norm(df).item()
-            values = [self.k, f.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha]
+            values = [self.k, f.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha, ls_iter, zoom_iter]
             values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
             print(info['frmt'].format(*values))
 
@@ -158,17 +158,18 @@ class WolfeLineSearch:
         if alphac is None or alphac == 0:
             alphac = 0.5 * self.alpha_max
 
-        iter = 0
-        while iter < self.max_iter:
+        zoom_iter = 0
+        iter = 1
+        while iter <= self.max_iter:
             phic, dphic = self.phi(obj_fctn, p, d, x, y, alphac, do_gradient=True)
 
             if (phic > phi0 + self.c1 * alphac * dphi0) or (phic > phi_old and iter > 0):
                 print('here1')
-                alpha_opt = self.zoom(obj_fctn, p, d, x, y, phi0, dphi0, alpha_old, phi_old, dphi_old, alphac, phic, dphic)
+                alpha_opt, zoom_iter = self.zoom(obj_fctn, p, d, x, y, phi0, dphi0, alpha_old, phi_old, dphi_old, alphac, phic, dphic)
                 if isinstance(alphac, torch.Tensor):
                     alpha_opt = alpha_opt.item()
 
-                return alpha_opt
+                return alpha_opt, iter, zoom_iter
 
             if abs(dphic) <= -self.c2 * dphi0:
                 print('here2')
@@ -176,14 +177,14 @@ class WolfeLineSearch:
                     alpha_opt = alphac.item()
                 else:
                     alpha_opt = alphac
-                return alpha_opt
+                return alpha_opt, iter, zoom_iter
 
             if dphic >= 0:
                 print('here3')
-                alpha_opt = self.zoom(obj_fctn, p, d, x, y, phi0, dphi0, alphac, phic, dphic, alpha_old, phi_old, dphi_old)
+                alpha_opt, zoom_iter = self.zoom(obj_fctn, p, d, x, y, phi0, dphi0, alphac, phic, dphic, alpha_old, phi_old, dphi_old)
                 if isinstance(alpha_opt, torch.Tensor):
                     alpha_opt = alpha_opt.item()
-                return alpha_opt
+                return alpha_opt, iter, zoom_iter
 
             alpha_old, phi_old, dphi_old = deepcopy(alphac), phic.clone(), dphic.clone()
             alphac = (alphac + self.alpha_max) / 2
@@ -191,12 +192,13 @@ class WolfeLineSearch:
             iter += 1
 
         # did not converge
-        return 0
+        # TODO: return iteration count
+        return 0, iter, zoom_iter
 
     def zoom(self, obj_fctn, p, d, x, y, phi0, dphi0, alphaLo, phiLo, dphiLo, alphaHi, phiHi, dphiHi):
-
-        iter = 0
-        while iter < self.max_zoom_iter:
+        # TODO: return iteration count
+        iter = 1
+        while iter <= self.max_zoom_iter:
             alpha = self.interpolate(alphaLo, phiLo, dphiLo, alphaHi, phiHi, dphiHi, phi0, dphi0)
             # alpha = 0.5 * (alphaLo + alphaHi)
 
@@ -210,7 +212,7 @@ class WolfeLineSearch:
                 if abs(dphic) <= -self.c2 * dphi0:
                     if isinstance(alpha, torch.Tensor):
                         alpha = alpha.item()
-                    return alpha
+                    return alpha, iter
 
                 if dphic * (alphaHi - alphaLo) >= 0:
                     alphaHi = alphaLo
@@ -221,7 +223,7 @@ class WolfeLineSearch:
             iter += 1
 
         # did not converge
-        return 0
+        return 0, iter
 
     @staticmethod
     def phi(obj_fctn, p, d, x, y, alpha, do_gradient=False):
@@ -237,8 +239,8 @@ class WolfeLineSearch:
     @staticmethod
     def interpolate(alphaLo, phiLo, dphiLo, alphaHi, phiHi, dphiHi, phi0=None, dphi0=None):
         # alpha = -(alphaLo ** 2 * dphiHi) / (2 * (phiLo - phiHi - alphaLo * dphiHi))
-        alpha = cubicmin(alphaLo, phiLo, dphiLo, alphaHi, phiHi, 0, phi0)[0]
-        # alpha = quadraticmin(alphaLo, phiLo, dphiLo, alphaHi, phiHi)[0]
+        # alpha = cubicmin(alphaLo, phiLo, dphiLo, alphaHi, phiHi, 0, phi0)[0]
+        alpha = quadraticmin(alphaLo, phiLo, dphiLo, alphaHi, phiHi)[0]
 
         myEps = 0.1 * abs(alphaHi - alphaLo)
         if (alpha is None) or (alpha <= myEps + min(alphaHi, alphaLo)): # or (alpha >= max(alphaHi, alphaLo) - myEps):
@@ -317,7 +319,7 @@ def quadraticmin(x, fx, dfx, y, fy):
         b += -2 * a * x
 
         # find minimizer
-        xmin = -b / 2 * a
+        xmin = -b / (2 * a)
         fmin = a * xmin ** 2 + b * xmin + c
     else:
         xmin = None
