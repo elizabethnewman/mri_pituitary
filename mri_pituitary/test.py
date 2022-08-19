@@ -18,7 +18,7 @@ net = nn.Linear(m, n)
 loss = nn.MSELoss()
 
 # create objective function
-alpha = 0
+alpha = 1e0
 f = ObjectiveFunction(net, loss, alpha=alpha)
 
 # check evaluation
@@ -63,14 +63,16 @@ z = torch.zeros(m + 1, n)
 z = torch.linalg.lstsq(torch.cat((A, math.sqrt(alpha) * I), dim=0), torch.cat((y, z), dim=0))
 x_opt = z.solution
 
+z = torch.linalg.solve(A.T @ A + alpha * I, A.T @ y)
+
 tmp = torch.cat((x_opt[:-1].T.reshape(-1), x_opt[-1].reshape(-1)))
 f_opt = f.evaluate(tmp, x, y)
 
 none_grad(net)
 n_params = get_num_parameters(net)
-opt = LBFGS(n_params, m=100)
+opt = LBFGS(n_params, m=10)
 
-tmp = opt.solve(f, p, x, y)
+tmp, _ = opt.solve(f, p, x, y)
 
 # weight
 print(torch.norm(tmp[:-n].reshape(-1) - x_opt[:-1].T.reshape(-1)))

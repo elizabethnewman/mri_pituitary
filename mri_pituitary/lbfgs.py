@@ -16,12 +16,26 @@ class LBFGS:
         self.k = 0
         self.gamma = 1.0
         self.alpha = 1.0
-        self.atol = 1e-8
-        self.rtol = 1e-8
+        self.atol = 1e-12
+        self.rtol = 1e-12
         self.max_iter = 100
         self.ls = WolfeLineSearch()
+        self.comp_metrics = True
 
-    def solve(self, obj_fctn, p, x, y):
+    def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
+
+        info = dict()
+        info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha',
+                          'loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
+        info['frmt'] = ('{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}' +
+                        '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}')
+        if x_val is not None and y_val is not None:
+            info['header'] += ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
+            info['frmt'] += '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
+
+        info['values'] = torch.empty(0, len(info['header']))
+
+        print((len(info['header']) * '{:<15s}').format(*info['header']))
 
         # ============
         # initial evaluation
@@ -31,14 +45,10 @@ class LBFGS:
         f_old, df_old = f.clone(), df.clone()
         alpha = 0
 
-        header_frmt = '{:<15s}{:<15s}{:<15s}{:<15s}{:<15s}{:<15s}'
-        headers = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha')
-        print(header_frmt.format(*headers))
-
-        frmt = '{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}'
         dfnrm = torch.norm(df0).item()
         values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha]
-        print(frmt.format(*values))
+        values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
+        print(info['frmt'].format(*values))
 
         # ============
         # main iteration
@@ -89,7 +99,8 @@ class LBFGS:
             self.k += 1
             dfnrm = torch.norm(df).item()
             values = [self.k, f.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha]
-            print(frmt.format(*values))
+            values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
+            print(info['frmt'].format(*values))
 
             p_old, f_old, df_old = p.clone(), f.clone(), df.clone()
 
@@ -98,7 +109,7 @@ class LBFGS:
                 break
                 # raise ValueError('Linesearch Break')
 
-        return p
+        return p, info
 
     def two_loop_recursion(self, q):
         alpha = torch.zeros(self.m, device=q.device, dtype=q.dtype)
@@ -296,3 +307,6 @@ def quadraticmin(x, fx, dfx, y, fy):
         fmin = None
 
     return xmin, fmin, (a, b, c)
+
+
+
