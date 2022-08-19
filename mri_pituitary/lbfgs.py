@@ -72,20 +72,8 @@ class LBFGS:
             # if alpha == 0 or alpha is None:
             #     print('HERE')
             #     # use Armijo search
-            #     k = 0
-            #     alpha2 = 1
-            #     gamma = 1e-3
-            #     tau = torch.dot(d.view(-1), df.view(-1))
-            #     while k < self.ls.max_iter:
-            #         f2 = obj_fctn.evaluate(p + alpha2 * df, x, y)[0]
-            #
-            #         if f2 <= f + gamma * tau:
-            #             break
-            #
-            #         alpha2 *= 0.5
-            #         k += 1
-            #     alpha = alpha2
-            
+
+
 
             p += alpha * d
 
@@ -127,6 +115,28 @@ class LBFGS:
             r += (alpha[i] - beta) * self.S[i]
 
         return r
+
+
+class ArmijoLineSearch:
+
+    def __init__(self):
+        self.max_iter = 20
+        self.gamma = 1e-3
+
+    def serach(self, obj_fctn, p, d, f, df, x, y, alpha=1.0):
+
+        k = 0
+        tau = torch.dot(d.view(-1), df.view(-1))
+        while k < self.max_iter:
+            f2 = obj_fctn.evaluate(p + alpha * d, x, y)[0]
+
+            if f2 <= f + self.gamma * tau:
+                break
+
+            alpha *= 0.5
+            k += 1
+
+        return alpha
 
 
 class WolfeLineSearch:
