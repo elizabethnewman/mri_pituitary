@@ -1,5 +1,5 @@
 import torch
-from mri_pituitary.utils import extract_data, insert_data, none_grad
+from mri_pituitary.utils import extract_data, insert_data, none_data
 from mri_pituitary.train import compute_metrics
 
 
@@ -14,18 +14,15 @@ class ObjectiveFunction:
         (Jc, dJc) = (None, None)
 
         # insert parameters
-
+        none_data(self.net, 'grad')
         insert_data(self.net, p)
         if do_gradient:
             self.net.train()
-            none_grad(self.net)
-
             out = self.net(x)
             misfit = self.loss(out, y)
             misfit.backward()
 
             g = extract_data(self.net, 'grad')
-            none_grad(self.net)
             reg = 0.5 * self.alpha * torch.norm(p) ** 2
             dreg = self.alpha * p
 
@@ -44,6 +41,7 @@ class ObjectiveFunction:
 
     def get_metrics(self, p, images_train, masks_train, images_val=None, masks_val=None):
         self.net.eval()
+
         insert_data(self.net, p)
         with torch.no_grad():
             Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self.net, self.loss)

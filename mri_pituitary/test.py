@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from mri_pituitary.objective_function import ObjectiveFunction
-from mri_pituitary.utils import extract_data, insert_data, none_grad, get_num_parameters
+from mri_pituitary.utils import extract_data, insert_data, none_data, get_num_parameters
 
 
 torch.set_default_dtype(torch.float64)
@@ -34,7 +34,7 @@ print(torch.norm(val - val2))
 
 # check gradient
 # check evaluation
-none_grad(net)
+none_data(net, 'grad')
 out = net(x)
 val = loss(out, y)
 val.backward()
@@ -42,7 +42,7 @@ val.backward()
 g = extract_data(net, 'grad')
 print(g)
 
-none_grad(net)
+none_data(net, 'grad')
 val2, g2 = f.evaluate(p, x, y, do_gradient=True)
 print(g2)
 
@@ -68,7 +68,7 @@ z = torch.linalg.solve(A.T @ A + alpha * I, A.T @ y)
 tmp = torch.cat((x_opt[:-1].T.reshape(-1), x_opt[-1].reshape(-1)))
 f_opt = f.evaluate(tmp, x, y)
 
-none_grad(net)
+none_data(net, 'grad')
 n_params = get_num_parameters(net)
 opt = LBFGS(n_params, m=10)
 

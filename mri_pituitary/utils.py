@@ -101,7 +101,7 @@ def insert_data(net: Module, theta: torch.Tensor, attr: str = 'data') -> None:
         count += n
 
 
-def none_grad(net: Module) -> None:
+def none_data(net: Module, attr: str = 'grad') -> None:
     """
     Insert 1D array of data into specific attribute
     """
@@ -109,7 +109,7 @@ def none_grad(net: Module) -> None:
     for name, w in net.named_parameters():
         name_split = name.split('.')
         n = w.numel()
-        module_setattr(net, name_split + ['grad'], None)
+        module_setattr(net, name_split + [attr], None)
         count += n
 
 
@@ -121,3 +121,4 @@ def get_num_parameters(net: Module) -> None:
     for p in net.parameters():
         count += p.numel()
     return count
+
