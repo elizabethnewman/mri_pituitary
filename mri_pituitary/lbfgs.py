@@ -95,6 +95,10 @@ class LBFGS:
                 break
                 # raise ValueError('Linesearch Break')
 
+        # release memory
+        self.S = None
+        self.Y = None
+        self.rho = None
         return p, info
 
     def two_loop_recursion(self, q):

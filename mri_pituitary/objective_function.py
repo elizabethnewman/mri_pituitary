@@ -8,10 +8,14 @@ class ObjectiveFunction:
     def __init__(self, net, loss, alpha=1e-3):
         self.net = net
         self.loss = loss
+        self.loss.reduction = 'sum'
         self.alpha = alpha
 
     def evaluate(self, p, x, y, do_gradient=False):
         (Jc, dJc) = (None, None)
+
+        # averaging factor
+        beta = 1 / x.shape[0]
 
         # insert parameters
         none_data(self.net, 'grad')
@@ -26,8 +30,8 @@ class ObjectiveFunction:
             reg = 0.5 * self.alpha * torch.norm(p) ** 2
             dreg = self.alpha * p
 
-            Jc = misfit + reg
-            dJc = g + dreg
+            Jc = beta * misfit.detach() + reg
+            dJc = beta * g + dreg
         else:
             self.net.eval()
             with torch.no_grad():
@@ -35,7 +39,8 @@ class ObjectiveFunction:
                 misfit = self.loss(out, y)
 
                 reg = 0.5 * self.alpha * torch.norm(p) ** 2
-                Jc = misfit + reg
+
+                Jc = beta * misfit + reg
 
         return Jc, dJc
 
@@ -60,9 +65,9 @@ if __name__ == '__main__':
     # do gradient check
 
     # create data
-    # N, m, n = 100, 3, 4
-    # x = torch.randn(N, m)
-    #
+    N, m, n = 100, 3, 4
+    x = torch.randn(N, m)
+
     y = torch.randn(N, n)
     net = nn.Sequential(nn.Linear(m, 10), nn.ReLU(), nn.Linear(10, n))
     loss = nn.MSELoss()
@@ -80,7 +85,7 @@ if __name__ == '__main__':
     # loss = nn.CrossEntropyLoss(weight=torch.tensor((0, 1, 1e-2)))
 
     # create network
-    alpha = 1e-4
+    alpha = 1e0
     f = ObjectiveFunction(net, loss, alpha=alpha)
 
     p = extract_data(net, 'data')
