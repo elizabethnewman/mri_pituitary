@@ -12,11 +12,11 @@ class ObjectiveFunction:
         self.alpha = alpha
 
         self.info = dict()
-        # self.info['header'] = ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
-        # self.info['frmt'] = '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
+        self.info['header'] = ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
+        self.info['frmt'] = '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
 
-        self.info['header'] = ()
-        self.info['frmt'] = ''
+        # self.info['header'] = ()
+        # self.info['frmt'] = ''
 
     def evaluate(self, p, x, y, do_gradient=False):
         (Jc, dJc) = (None, None)
