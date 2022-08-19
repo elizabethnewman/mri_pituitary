@@ -10,6 +10,7 @@ class ObjectiveFunction:
         self.loss = loss
         self.loss.reduction = 'sum'
         self.alpha = alpha
+        self.beta = None
 
         self.info = dict()
         self.info['header'] = ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
@@ -21,8 +22,8 @@ class ObjectiveFunction:
     def evaluate(self, p, x, y, do_gradient=False):
         (Jc, dJc) = (None, None)
 
-        # averaging factor
-        beta = 1 / x.shape[0]
+        if self.beta is None:
+            self.beta = 1.0 / x.shape[0]
 
         # insert parameters
         none_data(self.net, 'grad')
@@ -37,8 +38,8 @@ class ObjectiveFunction:
             reg = 0.5 * self.alpha * torch.norm(p) ** 2
             dreg = self.alpha * p
 
-            Jc = beta * misfit.detach() + reg
-            dJc = beta * g + dreg
+            Jc = self.beta * misfit.detach() + reg
+            dJc = self.beta * g + dreg
         else:
             self.net.eval()
             with torch.no_grad():
@@ -47,7 +48,7 @@ class ObjectiveFunction:
 
                 reg = 0.5 * self.alpha * torch.norm(p) ** 2
 
-                Jc = beta * misfit + reg
+                Jc = self.beta * misfit + reg
 
         return Jc, dJc
 
