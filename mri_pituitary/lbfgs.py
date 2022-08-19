@@ -16,8 +16,8 @@ class LBFGS:
         self.k = 0
         self.gamma = 1.0
         self.alpha = 1.0
-        self.atol = 1e-12
-        self.rtol = 1e-12
+        self.atol = 1e-14
+        self.rtol = 1e-14
         self.max_iter = 100
         self.ls = WolfeLineSearch()
         # self.ls = ArmijoLineSearch()
@@ -26,13 +26,15 @@ class LBFGS:
     def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
 
         info = dict()
-        info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha',
-                          'loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
-        info['frmt'] = ('{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}' +
-                        '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}')
+        info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha')
+        info['header'] += obj_fctn.info['header']
+
+        info['frmt'] = '{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}'
+        info['frmt'] += obj_fctn.info['frmt']
+
         if x_val is not None and y_val is not None:
-            info['header'] += ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
-            info['frmt'] += '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
+            info['header'] += obj_fctn.info['header']
+            info['frmt'] += obj_fctn.info['frmt']
 
         info['values'] = torch.empty(0, len(info['header']))
 

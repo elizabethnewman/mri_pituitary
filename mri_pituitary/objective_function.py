@@ -11,6 +11,13 @@ class ObjectiveFunction:
         self.loss.reduction = 'sum'
         self.alpha = alpha
 
+        self.info = dict()
+        # self.info['header'] = ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
+        # self.info['frmt'] = '{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
+
+        self.info['header'] = ()
+        self.info['frmt'] = ''
+
     def evaluate(self, p, x, y, do_gradient=False):
         (Jc, dJc) = (None, None)
 
@@ -50,7 +57,8 @@ class ObjectiveFunction:
         insert_data(self.net, p)
         with torch.no_grad():
             Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self.net, self.loss)
-            values = [Jc_train, acc_train] + dice_train + [sum(dice_train) / len(dice_train)] + [0]
+            values = [Jc_train, acc_train] + dice_train + [sum(dice_train) / len(dice_train)]
+            values = values[:len(self.info['header'])]
 
             if images_val is not None and masks_val is not None:
                 Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self.net, self.loss)

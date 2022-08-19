@@ -9,16 +9,15 @@ torch.set_default_dtype(torch.float64)
 seed_everything(42)
 
 # # create data
-N, m, n = 100, 6, 4
+N, m, n = 100, 2, 1
 x = torch.randn(N, m)
 y = torch.randn(N, n)
 
 # create network
-net = nn.Linear(m, n)
+net = nn.Linear(m, n, bias=False)
 
 # create loss
 loss = nn.MSELoss(reduction='sum')
-
 
 
 # N, C, m, n = 100, 2, 16, 16
@@ -71,11 +70,13 @@ import math
 from mri_pituitary.lbfgs import LBFGS
 
 
-A = torch.cat((x, torch.ones(x.shape[0], 1)), dim=1)
-I = torch.eye(m + 1)
+# A = torch.cat((x, torch.ones(x.shape[0], 1)), dim=1)
+
+A = x
+I = torch.eye(A.shape[1])
 nn = A.shape[0]
 
-z = torch.zeros(m + 1, n)
+z = torch.zeros(A.shape[1], n)
 z = torch.linalg.lstsq(torch.cat((1 / math.sqrt(nn) * A, math.sqrt(alpha) * I), dim=0),
                        torch.cat((1 / math.sqrt(nn) * y, z), dim=0))
 x_opt = z.solution
@@ -93,8 +94,8 @@ my_sol, _ = opt.solve(f, p, x, y)
 
 print(torch.norm(my_sol.view(-1) - torch_sol.view(-1)))
 
-# # weight
-print(torch.norm(my_sol[:-n].reshape(-1) - x_opt[:-1].T.reshape(-1)))
-
-# bias
-print(torch.norm(my_sol[-n:].reshape(-1) - x_opt[-1].reshape(-1)))
+# # # weight
+# print(torch.norm(my_sol[:-n].reshape(-1) - x_opt[:-1].T.reshape(-1)))
+#
+# # bias
+# print(torch.norm(my_sol[-n:].reshape(-1) - x_opt[-1].reshape(-1)))
