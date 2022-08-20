@@ -46,7 +46,7 @@ class LBFGS:
         nrmdf0 = torch.norm(df0).item()
         p_old, f, df = p.clone(), f0.clone(), df0.clone()
         f_old, df_old = f.clone(), df.clone()
-        alpha = 1.0
+        alpha = 0.0
 
         dfnrm = torch.norm(df0).item()
         values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha, 0, 0]
@@ -120,28 +120,6 @@ class LBFGS:
         return r
 
 
-class ArmijoLineSearch:
-
-    def __init__(self):
-        self.max_iter = 20
-        self.gamma = 1e-3
-
-    def search(self, obj_fctn, p, d, f, df, x, y, alpha=1.0):
-
-        k = 0
-        tau = torch.dot(d.view(-1), df.view(-1))
-        while k < self.max_iter:
-            f2 = obj_fctn.evaluate(p + alpha * d, x, y)[0]
-
-            if f2 <= f + self.gamma * tau:
-                break
-
-            alpha *= 0.5
-            k += 1
-
-        return alpha, k
-
-
 class WolfeLineSearch:
 
     def __init__(self):
@@ -192,11 +170,9 @@ class WolfeLineSearch:
             iter += 1
 
         # did not converge
-        # TODO: return iteration count
         return 0, iter, zoom_iter
 
     def zoom(self, obj_fctn, p, d, x, y, phi0, dphi0, alphaLo, phiLo, dphiLo, alphaHi, phiHi, dphiHi):
-        # TODO: return iteration count
         iter = 1
         while iter <= self.max_zoom_iter:
             alpha = self.interpolate(alphaLo, phiLo, dphiLo, alphaHi, phiHi, dphiHi, phi0, dphi0)
@@ -329,3 +305,23 @@ def quadraticmin(x, fx, dfx, y, fy):
 
 
 
+class ArmijoLineSearch:
+
+    def __init__(self):
+        self.max_iter = 20
+        self.gamma = 1e-3
+
+    def search(self, obj_fctn, p, d, f, df, x, y, alpha=1.0):
+
+        k = 0
+        tau = torch.dot(d.view(-1), df.view(-1))
+        while k < self.max_iter:
+            f2 = obj_fctn.evaluate(p + alpha * d, x, y)[0]
+
+            if f2 <= f + self.gamma * tau:
+                break
+
+            alpha *= 0.5
+            k += 1
+
+        return alpha, k
