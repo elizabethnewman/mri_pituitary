@@ -35,7 +35,11 @@ def get_labels(X: torch.Tensor):
     :return: label per pixel of size N x H x W
     :rtype: torch.Tensor
     """
-    return torch.argmax(X, dim=1)
+    if X.ndim < 2:
+        # assume we have class labels, not one-hot vectors
+        return X
+    else:
+        return torch.argmax(X, dim=1)
 
 
 def get_accuracy(X: torch.Tensor, Y: torch.Tensor):
