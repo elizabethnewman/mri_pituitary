@@ -15,7 +15,7 @@ def compute_metrics(images, masks, net, loss):
 
     # dice values
     if masks.ndim < 2:
-        num_classes = torch.unique(masks, eturn_counts=True)[-1]
+        num_classes = torch.unique(masks, return_counts=True)[-1]
     else:
         num_classes = masks.shape[1]
 
