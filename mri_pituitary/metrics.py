@@ -14,8 +14,13 @@ def compute_metrics(images, masks, net, loss):
     acc = 100 * (predicted_labels == true_labels).sum() / predicted_labels.numel()
 
     # dice values
+    if masks.ndim < 2:
+        num_classes = torch.unique(masks, eturn_counts=True)[-1]
+    else:
+        num_classes = masks.shape[1]
+
     dice_values = []
-    for k in range(masks.shape[1]):
+    for k in range(num_classes):
         dice_values.append(get_dice(predicted_labels, true_labels, k))
 
     return Jc.item(), acc.item(), dice_values
