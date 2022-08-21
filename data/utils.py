@@ -30,7 +30,7 @@ def rgb2gray(filename, cutoff=0):
     return img
 
 
-def get_box(patient_box, min_size=300):
+def get_box(patient_box, min_size=250):
     # TODO: check sizes
 
     # get top and bottom boundaries

@@ -71,6 +71,23 @@ pickle.dump(info, open("patient-" + str(patient_num) + ".p", "wb"))
 #%%
 import matplotlib.pyplot as plt
 
+n = patient_mask.shape[0]
+
+mm = info['mask'].argmax(axis=-1)
+
+plt.figure()
+for i in range(min(40, n)):
+    plt.subplot(5, 8, i + 1)
+    plt.imshow(mm[i], vmax=3, vmin=0)
+    plt.axis('off')
+    # plt.colorbar()
+    # plt.show()
+
+plt.show()
+
+
+#%%
+
 # cutoffs = (350, -150, 400, -400)
 # info = convert_raw2ML(patient_img, patient_mask, patient_files,
 #                       box=(350, -150, 400, -400), nrm_type='image_standardization')

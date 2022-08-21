@@ -25,10 +25,27 @@ x = torch.randn(N, C, m, n)
 
 y = torch.rand(N, 2, 10, 10)
 y = y / y.sum(dim=1, keepdim=True)
-y = 1 * (y >= 0.5)
+y = 1 * (y >= 0.7)
 y = torch.cat((y, 1 - y.sum(dim=1, keepdim=True)), dim=1).to(torch.float32)
-net = nn.Sequential(nn.Conv2d(C, 5, (3, 3)), nn.Tanh(), nn.Conv2d(5, 3, (5, 5)))
-loss = nn.CrossEntropyLoss(weight=torch.tensor((1, 1, 1)))
+y = y.argmax(dim=1)
+y = y.view(-1)
+
+
+
+class MyNet(nn.Module):
+    def __init__(self):
+        super(MyNet, self).__init__()
+        self.f = nn.Sequential(nn.Conv2d(C, 5, (3, 3)), nn.Tanh(), nn.Conv2d(5, 3, (5, 5)))
+
+    def forward(self, x):
+        x = self.f(x)
+        x = x.permute(0, 2, 3, 1).contiguous()
+        x = x.view(-1, x.shape[-1])
+        return x
+
+
+net = MyNet()
+loss = nn.CrossEntropyLoss()
 
 # create objective function
 alpha = 1e-2
