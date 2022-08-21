@@ -27,8 +27,8 @@ y = torch.rand(N, 2, 10, 10)
 y = y / y.sum(dim=1, keepdim=True)
 y = 1 * (y >= 0.7)
 y = torch.cat((y, 1 - y.sum(dim=1, keepdim=True)), dim=1).to(torch.float32)
-y = y.argmax(dim=1)
-y = y.view(-1)
+# y = y.argmax(dim=1)
+# y = y.view(-1)
 
 
 
@@ -39,8 +39,8 @@ class MyNet(nn.Module):
 
     def forward(self, x):
         x = self.f(x)
-        x = x.permute(0, 2, 3, 1).contiguous()
-        x = x.view(-1, x.shape[-1])
+        # x = x.permute(0, 2, 3, 1).contiguous()
+        # x = x.view(-1, x.shape[-1])
         return x
 
 

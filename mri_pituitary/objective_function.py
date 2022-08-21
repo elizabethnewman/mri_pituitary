@@ -58,12 +58,12 @@ class ObjectiveFunction:
 
         insert_data(self.net, p)
         with torch.no_grad():
-            Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self.net, self.loss)
+            Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self)
             values = [Jc_train, acc_train] + dice_train + [sum(dice_train) / len(dice_train)]
             values = values[:len(self.info['header'])]
 
             if images_val is not None and masks_val is not None:
-                Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self.net, self.loss)
+                Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self)
                 values += [Jc_val, acc_val] + dice_val + [sum(dice_val) / len(dice_val)]
 
         return values

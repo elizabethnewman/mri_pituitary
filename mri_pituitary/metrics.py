@@ -1,12 +1,12 @@
 import torch
 
 
-def compute_metrics(images, masks, net, loss):
-    # output features
-    out = net(images)
-
-    # loss
-    Jc = loss(out, masks)
+def compute_metrics(images, masks, f):
+    f.net.eval()
+    with torch.no_grad():
+        out = f.net(images)
+        misfit = f.loss(out, masks)
+        Jc = f.beta * misfit
 
     # accuracy
     predicted_labels = get_labels(out)

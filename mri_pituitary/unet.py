@@ -121,9 +121,9 @@ class UNet(nn.Module):
         if self.resize:
             x = F.interpolate(x, (H, W))
 
-        # reshape
-        x = x.permute(0, 2, 3, 1).contiguous()
-        x = x.view(-1, x.shape[-1])
+        # # reshape
+        # x = x.permute(0, 2, 3, 1).contiguous()
+        # x = x.view(-1, x.shape[-1])
 
         return x
 
