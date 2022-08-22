@@ -117,7 +117,7 @@ def convert_raw2ML(img, mask, boundaries, names, cm=None, nrm_type='image_standa
     # # compute difference (have to add a catch if reaching boundary)
     # d = np.min(upper - lower, axis=0)
 
-    # crop images based on center of mass
+    # crop images based on given box
     img2 = crop_img(img, boundaries)
     mask2 = crop_img(mask, boundaries)
 

@@ -26,10 +26,10 @@ def compute_metrics(images, masks, net, loss, beta=1.0):
     return Jc.item(), acc.item(), dice_values
 
 
-def get_dice(X: torch.Tensor, Y: torch.Tensor, k: int):
-    num = 2 * ((X == k) * (Y == k)).sum()
-    den = (X == k).sum() + (Y == k).sum()
-    return num.item() / max(den.item(), 1)
+def get_dice(X: torch.Tensor, Y: torch.Tensor, k: int, eps=1e-3):
+    num = 2 * ((X == k) * (Y == k)).sum() + eps
+    den = (X == k).sum() + (Y == k).sum() + eps
+    return num.item() / den.item()
 
 
 def get_labels(X: torch.Tensor):
