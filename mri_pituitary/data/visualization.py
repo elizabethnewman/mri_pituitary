@@ -7,7 +7,7 @@ def plot_mask(mask, axis=0, show_colorbar=True):
     # https://riptutorial.com/matplotlib/example/20692/custom-discrete-colormap
     cmap = ListedColormap(['red', 'green', 'blue', 'black'])
     mm = mask.argmax(axis=axis)
-    plt.imshow(mm, cmap=cmap, aspect='auto', vmin=0, vmax=3)
+    plt.imshow(mm, cmap=cmap, vmin=0, vmax=3)
     plt.axis('off')
 
     if show_colorbar:
