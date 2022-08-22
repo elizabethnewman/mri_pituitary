@@ -5,12 +5,12 @@ from mri_pituitary.metrics import compute_metrics
 
 class ObjectiveFunction:
 
-    def __init__(self, net, loss, alpha=1e-3):
+    def __init__(self, net, loss, alpha=1e-3, mean_type='batch_mean'):
         self.net = net
         self.loss = loss
         self.loss.reduction = 'sum'
         self.alpha = alpha
-        self.beta = None
+        self.mean_type = mean_type
 
         self.info = dict()
         # self.info['header'] = ('loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
@@ -22,9 +22,7 @@ class ObjectiveFunction:
     def evaluate(self, p, x, y, do_gradient=False):
         (Jc, dJc) = (None, None)
 
-        if self.beta is None:
-            self.beta = 1.0 / x.shape[0]
-            # TODO: check averaging factor
+        beta = self._get_beta(x)
 
         # insert parameters
         none_data(self.net, 'grad')
@@ -38,8 +36,8 @@ class ObjectiveFunction:
             g = extract_data(self.net, 'grad')
             reg = self.alpha * torch.norm(p) ** 2
             dreg = 2 * self.alpha * p
-            Jc = self.beta * misfit.detach() + reg
-            dJc = self.beta * g + dreg
+            Jc = beta * misfit.detach() + reg
+            dJc = beta * g + dreg
         else:
             self.net.eval()
             with torch.no_grad():
@@ -48,21 +46,32 @@ class ObjectiveFunction:
 
                 reg = self.alpha * torch.norm(p) ** 2
 
-                Jc = self.beta * misfit + reg
+                Jc = beta * misfit + reg
 
         return Jc, dJc
+
+    def _get_beta(self, x):
+        if self.mean_type == 'batch_mean':
+            beta = 1.0 / x.shape[0]
+        elif self.mean_type == 'total_mean':
+            beta = 1.0 / x.numel()
+        else:
+            beta = 1.0
+        return beta
 
     def get_metrics(self, p, images_train, masks_train, images_val=None, masks_val=None):
         self.net.eval()
 
         insert_data(self.net, p)
         with torch.no_grad():
-            Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self)
+            beta = self._get_beta(images_train)
+            Jc_train, acc_train, dice_train = compute_metrics(images_train, masks_train, self.net, self.loss, beta)
             values = [Jc_train, acc_train] + dice_train + [sum(dice_train) / len(dice_train)]
             values = values[:len(self.info['header'])]
 
             if images_val is not None and masks_val is not None:
-                Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self)
+                beta = self._get_beta(images_val)
+                Jc_val, acc_val, dice_val = compute_metrics(images_val, masks_val, self.net, self.loss, beta)
                 values += [Jc_val, acc_val] + dice_val + [sum(dice_val) / len(dice_val)]
 
         return values
