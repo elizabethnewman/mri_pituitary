@@ -36,9 +36,8 @@ class ObjectiveFunction:
             misfit.backward()
 
             g = extract_data(self.net, 'grad')
-            reg = 0.5 * self.alpha * torch.norm(p) ** 2
-            dreg = self.alpha * p
-
+            reg = self.alpha * torch.norm(p) ** 2
+            dreg = 2 * self.alpha * p
             Jc = self.beta * misfit.detach() + reg
             dJc = self.beta * g + dreg
         else:
@@ -47,7 +46,7 @@ class ObjectiveFunction:
                 out = self.net(x)
                 misfit = self.loss(out, y)
 
-                reg = 0.5 * self.alpha * torch.norm(p) ** 2
+                reg = self.alpha * torch.norm(p) ** 2
 
                 Jc = self.beta * misfit + reg
 

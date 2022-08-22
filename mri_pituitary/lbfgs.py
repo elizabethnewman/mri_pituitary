@@ -6,7 +6,13 @@ import math
 
 class LBFGS:
 
-    def __init__(self, n, m=10, dtype=None, device=None):
+    def __init__(self, n, m=10,
+                 max_iter=100,
+                 gamma=1.0,
+                 alpha=1.0,
+                 atol=1e-10,
+                 rtol=1e-10,
+                 dtype=None, device=None):
         factor_kwargs = {'dtype': dtype, 'device': device}
         self.n = n      # number of parameters
         self.m = m      # memory depth
@@ -14,11 +20,11 @@ class LBFGS:
         self.Y = torch.zeros(m, n, **factor_kwargs)    # storage for difference in gradients
         self.rho = torch.zeros(m, 1, **factor_kwargs)       # curavture info
         self.k = 0
-        self.gamma = 1.0
-        self.alpha = 1.0
-        self.atol = 1e-14
-        self.rtol = 1e-14
-        self.max_iter = 100
+        self.gamma = alpha
+        self.alpha = gamma
+        self.atol = atol
+        self.rtol = rtol
+        self.max_iter = max_iter
         self.ls = WolfeLineSearch()
         # self.ls = ArmijoLineSearch()
         self.comp_metrics = True
@@ -88,6 +94,7 @@ class LBFGS:
             dfnrm = torch.norm(df).item()
             values = [self.k, f.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha, ls_iter, zoom_iter]
             values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
+            info['values'] = torch.cat((info['values'], torch.tensor(values).reshape(1, -1)), dim=0)
             print(info['frmt'].format(*values))
 
             p_old, f_old, df_old = p.clone(), f.clone(), df.clone()
