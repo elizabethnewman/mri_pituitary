@@ -129,12 +129,12 @@ class LBFGS:
 
 class WolfeLineSearch:
 
-    def __init__(self):
-        self.max_iter = 50
-        self.c1 = 1e-4
-        self.c2 = 0.9
-        self.alpha_max = 5
-        self.max_zoom_iter = 50
+    def __init__(self, max_iter=50, max_zoom_iter=50, c1=1e-4, c2=0.9, alpha_max=5):
+        self.max_iter = max_iter
+        self.c1 = c1
+        self.c2 = c2
+        self.alpha_max = alpha_max
+        self.max_zoom_iter = max_zoom_iter
 
     def search(self, obj_fctn, p, d, x, y, alphac=None):
         phi0, dphi0 = self.phi(obj_fctn, p, d, x, y, 0, do_gradient=True)

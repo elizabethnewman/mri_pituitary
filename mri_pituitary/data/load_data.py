@@ -1,10 +1,9 @@
 import numpy as np
-import scipy.ndimage
 from PIL import Image
-from data.utils import rgb2gray, make_masks, normalize_image, convert_raw2ML, create_full_mask, get_box
+from mri_pituitary.data.utils import rgb2gray, make_masks, convert_raw2ML, get_box
+from mri_pituitary.data.visualization import plot_mask
 import pickle
 import os
-import scipy.ndimage
 
 # TODO: file names with and without spaces
 patient_num = 2
@@ -22,7 +21,7 @@ patient_files = []
 
 
 count = 0
-for i in range(1, 121, 3):
+for i in range(1, 34, 3):
     # convert to grayscale
 
     # image
@@ -63,9 +62,9 @@ print(os.getcwd())
 #         'id': patient_files}
 info = convert_raw2ML(patient_img, patient_mask, patient_boundaries, patient_files, cm=center_mass, nrm_type='image_standardization')
 
-os.chdir('/Users/elizabethnewman/Desktop/tmp/')
-print(os.getcwd())
-pickle.dump(info, open("patient-" + str(patient_num) + ".p", "wb"))
+# os.chdir('/Users/elizabethnewman/Desktop/tmp/')
+# print(os.getcwd())
+# pickle.dump(info, open("patient-" + str(patient_num) + ".p", "wb"))
 
 
 #%%
@@ -76,14 +75,18 @@ n = patient_mask.shape[0]
 mm = info['mask'].argmax(axis=-1)
 
 plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(mm[i], vmax=3, vmin=0)
-    plt.axis('off')
-    # plt.colorbar()
-    # plt.show()
-
+plot_mask(info['mask'][10], axis=-1)
 plt.show()
+
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(mm[i], vmax=3, vmin=0)
+#     plt.axis('off')
+#     # plt.colorbar()
+#     # plt.show()
+#
+# plt.show()
 
 
 #%%
@@ -92,44 +95,44 @@ plt.show()
 # info = convert_raw2ML(patient_img, patient_mask, patient_files,
 #                       box=(350, -150, 400, -400), nrm_type='image_standardization')
 
-n = patient_mask.shape[0]
-
-plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(255 * patient_mask[i, :, :, :3])
-    plt.axis('off')
-
-plt.show()
-
-plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(patient_img[i, :, :, 0])
-    plt.axis('off')
-
-plt.show()
-
-plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(patient_box[i])
-    plt.axis('off')
-
-plt.show()
-
-plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(255 * info['mask'][i, :, :, :3])
-    plt.axis('off')
-
-plt.show()
-
-plt.figure()
-for i in range(min(40, n)):
-    plt.subplot(5, 8, i + 1)
-    plt.imshow(info['data'][i, :, :, 0])
-    plt.axis('off')
-
-plt.show()
+# n = patient_mask.shape[0]
+#
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(255 * patient_mask[i, :, :, :3])
+#     plt.axis('off')
+#
+# plt.show()
+#
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(patient_img[i, :, :, 0])
+#     plt.axis('off')
+#
+# plt.show()
+#
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(patient_box[i])
+#     plt.axis('off')
+#
+# plt.show()
+#
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(255 * info['mask'][i, :, :, :3])
+#     plt.axis('off')
+#
+# plt.show()
+#
+# plt.figure()
+# for i in range(min(40, n)):
+#     plt.subplot(5, 8, i + 1)
+#     plt.imshow(info['data'][i, :, :, 0])
+#     plt.axis('off')
+#
+# plt.show()
