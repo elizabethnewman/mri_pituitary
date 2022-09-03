@@ -15,3 +15,13 @@ def plot_mask(mask, axis=0, show_colorbar=True):
         cbar.set_ticks([0.375, 1.125, 1.875, 2.625])
         cbar.set_ticklabels(('tumor?', 'stalk?', 'gland?', 'none'))
 
+
+def plot_output_features(out):
+    plt.figure()
+
+    for i, name in enumerate(['red', 'green', 'blue', 'background']):
+        plt.subplot(2, 2, i + 1)
+        plt.imshow(out[i].detach().cpu())
+        plt.axis('off')
+        plt.colorbar()
+        plt.title(name)

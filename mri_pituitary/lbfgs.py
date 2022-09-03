@@ -2,6 +2,8 @@
 import torch
 from copy import deepcopy
 import math
+import matplotlib.pyplot as plt
+from mri_pituitary.data.visualization import plot_mask
 
 
 class LBFGS:
@@ -29,7 +31,7 @@ class LBFGS:
         # self.ls = ArmijoLineSearch()
         self.comp_metrics = True
 
-    def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None):
+    def solve(self, obj_fctn, p, x, y, x_val=None, y_val=None, show_mask_plots=False):
 
         info = dict()
         info['header'] = ('iter', 'f', '|df|', '|df|/|df0|', '|x1-x0|', 'alpha', 'ls_iter', 'zoom_iter')
@@ -58,6 +60,17 @@ class LBFGS:
         values = [self.k, f0.item(), dfnrm, dfnrm / nrmdf0, torch.norm(p - p_old).item(), alpha, 0, 0]
         values += obj_fctn.get_metrics(p, x, y, x_val, y_val)
         print(info['frmt'].format(*values))
+
+        if show_mask_plots:
+            with torch.no_grad():
+                # plot_output_features(net(images_train)[0])
+                plot_mask(y[10])
+                plt.title('ground truth')
+                plt.show()
+
+                plot_mask(obj_fctn.net(x)[10])
+                plt.title('iter = ' + str(-1))
+                plt.show()
 
         # ============
         # main iteration
@@ -103,6 +116,17 @@ class LBFGS:
                 print('Linesearch Break')
                 break
                 # raise ValueError('Linesearch Break')
+
+            if show_mask_plots:
+                with torch.no_grad():
+                    # plot_output_features(net(images_train)[0])
+                    plot_mask(y[10])
+                    plt.title('ground truth')
+                    plt.show()
+
+                    plot_mask(obj_fctn.net(x)[10])
+                    plt.title('iter = ' + str(-1))
+                    plt.show()
 
         # release memory
         self.S = None

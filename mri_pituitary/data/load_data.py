@@ -7,7 +7,7 @@ import pickle
 import os
 
 # TODO: file names with and without spaces
-patient_num = 30
+patient_num = 2
 
 os.chdir('/Users/elizabethnewman/OneDrive - Emory University/MRI - Labelling/With boxes/' + str(patient_num))
 

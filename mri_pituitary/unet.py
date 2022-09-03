@@ -40,7 +40,7 @@ class Encoder(nn.Module):
             # apply convolution
             x = block(x)
 
-            # store featurs
+            # store features
             features.append(x.clone().detach().requires_grad_(False))
 
             # pool layer

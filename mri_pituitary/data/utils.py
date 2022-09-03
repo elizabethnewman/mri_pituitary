@@ -94,7 +94,12 @@ def normalize_image(img, nrm_type):
     elif nrm_type == 'clahe':
         # https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html
         clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        img = clahe.apply(img)
+
+        img3 = np.zeros_like(img)
+        for i in range(img.shape[0]):
+            img2 = cv.cvtColor(np.repeat(img[i], 3, axis=-1), cv.COLOR_BGR2GRAY)
+            img2 = clahe.apply(img2)
+            img3[i] = img2
 
     else:
         # rescale
@@ -104,7 +109,7 @@ def normalize_image(img, nrm_type):
 
 
 def convert_raw2ML(img, mask, boundaries, names, cm=None, nrm_type='image_standardization',
-                   box=(350, -150, 400, -400)):
+                   box=(150, 150, 150, 150)):
 
     if cm is None:
         cm = (img.shape[1:3] // 2) * np.ones(img.shape[0], 2)
@@ -116,7 +121,7 @@ def convert_raw2ML(img, mask, boundaries, names, cm=None, nrm_type='image_standa
     upper = np.maximum(cm + np.array([box[1], box[3]]).reshape(1, -1), 0)
 
     # compute difference (have to add a catch if reaching boundary)
-    d = np.min(upper - lower, axis=0)
+    # d = np.min(upper - lower, axis=0)
 
     # crop images based on given box
     # img2 = crop_img(img, boundaries)
