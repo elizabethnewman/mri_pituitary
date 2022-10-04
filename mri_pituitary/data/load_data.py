@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import scipy.ndimage
-from mri_pituitary.data.utils import rgb2gray, make_masks, convert_raw2ML, get_box
+from mri_pituitary.data.utils import rgb2gray, make_masks, convert_raw2ML, get_box, normalize_image
 from mri_pituitary.data.visualization import plot_mask
 import pickle
 import os
@@ -11,7 +11,7 @@ patient_num = 2
 
 os.chdir('/Users/elizabethnewman/OneDrive - Emory University/MRI - Labelling/With boxes/' + str(patient_num))
 
-N, C, H, W = 40, 1, 768, 1024
+N, C, H, W = 40, 3, 768, 1024
 n_classes = 4
 
 patient_img = np.zeros((N, H, W, C))
@@ -30,9 +30,11 @@ for i in range(1, 121, 3):
     filename = str(patient_num) + '.' + img_num + '.jpeg'
 
     if os.path.exists(filename):
-        p_img = rgb2gray(filename)
+        # p_img = rgb2gray(filename)
+        p_img = np.array(Image.open(filename))
         patient_files.append(filename)
-        patient_img[count] = p_img[:, :, np.newaxis]
+        # patient_img[count] = p_img[:, :, np.newaxis]
+        patient_img[count] = p_img
         center_mass[count] = scipy.ndimage.center_of_mass(patient_img[count, :, :, 0])
 
     # mask
@@ -56,14 +58,15 @@ patient_mask = make_masks(patient_mask[:count])
 patient_boundaries = get_box(patient_box[:count])
 
 print(os.getcwd())
-# info = {'data': normalize_image(patient_img[:, 400:-150, 400:-400], 'image_standardization'),
-#         'mask': patient_mask[:, 400:-150, 400:-400],
+# info = {'data': normalize_image(patient_img[:, 300:-150, 400:-400], 'image_standardization'),
+#         'mask': patient_mask[:, 300:-150, 400:-400],
 #         'orig_img_size': (patient_img.shape[1], patient_img.shape[2]),
 #         'cutoffs': ((400, patient_img.shape[1] - 150), (400, patient_img.shape[2] - 400)),
 #         'id': patient_files}
+
 box = (150, 150, 150, 150)
 info = convert_raw2ML(patient_img, patient_mask, patient_boundaries, patient_files, cm=center_mass,
-                      nrm_type='image_standardization', box=box)
+                      nrm_type='none', box=box)
 
 os.chdir('/Users/elizabethnewman/Desktop/tmp/')
 print(os.getcwd())

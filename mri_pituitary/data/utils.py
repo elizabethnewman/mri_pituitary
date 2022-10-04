@@ -100,8 +100,7 @@ def normalize_image(img, nrm_type):
             img2 = cv.cvtColor(np.repeat(img[i], 3, axis=-1), cv.COLOR_BGR2GRAY)
             img2 = clahe.apply(img2)
             img3[i] = img2
-
-    else:
+    elif nrm_type == 'rescale':
         # rescale
         img = (img - img.min()) / (img.max() - img.min())
 
@@ -124,14 +123,14 @@ def convert_raw2ML(img, mask, boundaries, names, cm=None, nrm_type='image_standa
     # d = np.min(upper - lower, axis=0)
 
     # crop images based on given box
-    # img2 = crop_img(img, boundaries)
-    # mask2 = crop_img(mask, boundaries)
+    img2 = crop_img(img, boundaries)
+    mask2 = crop_img(mask, boundaries)
 
-    img2 = np.zeros((img.shape[0], box[0] + box[1], box[2] + box[3], img.shape[-1])).astype(img.dtype)
-    mask2 = np.zeros((mask.shape[0], box[0] + box[1], box[2] + box[3], mask.shape[-1])).astype(img.dtype)
-    for i in range(img.shape[0]):
-        img2[i] = img[i, lower[i, 0]:upper[i, 0], lower[i, 1]:upper[i, 1]]
-        mask2[i] = mask[i, lower[i, 0]:upper[i, 0], lower[i, 1]:upper[i, 1]]
+    # img2 = np.zeros((img.shape[0], box[0] + box[1], box[2] + box[3], img.shape[-1])).astype(img.dtype)
+    # mask2 = np.zeros((mask.shape[0], box[0] + box[1], box[2] + box[3], mask.shape[-1])).astype(img.dtype)
+    # for i in range(img.shape[0]):
+    #     img2[i] = img[i, lower[i, 0]:upper[i, 0], lower[i, 1]:upper[i, 1]]
+    #     mask2[i] = mask[i, lower[i, 0]:upper[i, 0], lower[i, 1]:upper[i, 1]]
 
     info = {'data': normalize_image(img2, nrm_type).astype(np.float32),
             'mask': mask2.astype(int),

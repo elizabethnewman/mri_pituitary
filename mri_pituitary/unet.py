@@ -64,6 +64,7 @@ class Decoder(nn.Module):
             for i in range(len(channels) - 1)])
 
     def forward(self, x, features):
+        n = len(features)
         for i in range(len(self.channels) - 1):
             # up-conv
             x = self.upconvs[i](x)
@@ -87,7 +88,7 @@ class UNet(nn.Module):
                  enc_channels=(3, 64, 128, 256, 512),
                  dec_channels=(512, 256, 128, 64),
                  intrinsic_channels=1024,
-                 num_classes=3,
+                 num_classes=4, softmax=False,
                  resize=True, device=None, dtype=None):
         factory_kwargs = {'device': device, 'dtype': dtype}
         super(UNet, self).__init__()
@@ -100,6 +101,8 @@ class UNet(nn.Module):
 
         # final resize
         self.resize = resize
+
+        self.softmax = softmax
 
     def forward(self, x):
         # starting size
@@ -120,6 +123,9 @@ class UNet(nn.Module):
         # resize option
         if self.resize:
             x = F.interpolate(x, (H, W))
+
+        if self.softmax:
+            x = F.softmax(x, dim=1)
 
         # # reshape
         # x = x.permute(0, 2, 3, 1).contiguous()

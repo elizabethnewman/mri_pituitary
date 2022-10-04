@@ -9,10 +9,11 @@ import os
 import pickle
 
 from mri_pituitary.unet import UNet
-from mri_pituitary.utils import seed_everything, extract_data
+from mri_pituitary.utils import seed_everything, extract_data, get_num_parameters
 from mri_pituitary.metrics import get_dice, get_accuracy, get_labels, compute_metrics
 from mri_pituitary.data.visualization import plot_mask, plot_output_features
-from mri_pituitary.losses import DiceLoss2
+from mri_pituitary.lbfgs import LBFGS
+from mri_pituitary.objective_function import ObjectiveFunction
 
 #%%
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -38,7 +39,7 @@ seed_everything(42)
 
 shuffle = True
 
-n = 20
+n = 80
 
 if shuffle:
     idx = torch.randperm(images.shape[0])
@@ -68,12 +69,10 @@ total_pixels = images_train.shape[2] * images_train.shape[3]
 batch_size = images_train.shape[0]
 pixels_per_class = torch.sum(masks_train, dim=(0, 2, 3))
 weight = total_pixels / pixels_per_class
-# weight = weight / weight.sum()
 # weight = torch.tensor([1.0, 1.0, 1.0, 1.0])
 
 print(weight)
 loss = nn.CrossEntropyLoss(weight=weight.to(device), reduction='mean')
-# loss = DiceLoss2(device=device)
 
 print(loss)
 
@@ -103,81 +102,19 @@ seed_everything(20)
 
 
 n_classes = masks.shape[-1]
-w = 15
-net = UNet(enc_channels=(1, w, 2 * w, 4 * w),
-           dec_channels=(4 * w, 2 * w, w),
-           intrinsic_channels=8 * w,
-           num_classes=4,
-           softmax=False).to(device)
+w = 8
+net = UNet(enc_channels=(1, w, 2 * w, 4 * w), dec_channels=(4 * w, 2 * w, w), intrinsic_channels=8 * w, num_classes=4).to(device)
 # print(net)
 
-optimizer = optim.LBFGS(net.parameters(), line_search_fn='strong_wolfe', lr=1e-3)
-# optimizer = optim.SGD(net.parameters(), lr=10)
+alpha = 0.0
+f = ObjectiveFunction(net, loss, alpha=alpha)
+f.mean_type = 'total_mean'
+
+n = get_num_parameters(net)
+optimizer = LBFGS(n, device=device)
+optimizer.ls.alpha_max = 5.0
 print(optimizer)
 
-# ==================================================================================================================== #
-headers = ('epoch', '|p|', '|g|', '|g|/|g0|', 'loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.', 'loss', 'acc', 'red', 'green', 'blue', 'back', 'avg.')
-frmt = '{:<15d}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4e}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}{:<15.4f}'
-
-print((18 * '{:<15s}').format(*('', '', '', '', 'training', '', '', '', '', '', '', 'validation', '', '', '', '', '', '')))
-print((18 * '{:<15s}').format(*('', '', '', '', '', '', 'dice', '', '', '', '', '', '', 'dice', '', '', '', '')))
-print((6 * '{:<15s}' + 4 * '{:<15.2e}' + 8 * '{:<15s}').format(*('', '', '', '', '', 'weights', weight[0], weight[1], weight[2], weight[3], '', '', '', '', '', '', '', '')))
-
-print((18 * '{:<15s}').format(*headers))
-
-optimizer.zero_grad()
-values = evaluate(net, loss, images_train, masks_train, images_val, masks_val, -1)
-history = {'header': headers, 'frmt': frmt, 'values': torch.tensor(values).reshape(1, -1)}
-g0nrm = values[2]
-
-print(frmt.format(*values))
-
-with torch.no_grad():
-    # plot_output_features(net(images_train)[0])
-    plot_mask(masks_train[10])
-    plt.title('ground truth')
-    plt.show()
-
-    plot_mask(net(images_train)[10])
-    plt.title('iter = ' + str(-1))
-    plt.show()
-
-
-alpha = 1e-3
-max_iter = 100
-for my_iter in range(max_iter):
-
-    net.train()
-
-    # L-BFGS
-    def closure():
-        optimizer.zero_grad()
-        out_train = net(images_train)
-        Jc = loss(out_train, masks_train)
-
-        # # regularization
-        # for p in net.parameters():
-        #     Jc = Jc + 0.5 * alpha * torch.norm(p) ** 2
-
-        Jc.backward()
-        return Jc
-
-    optimizer.step(closure)
-
-    # SGD
-    # optimizer.zero_grad()
-    # out_train = net(images_train)
-    # Jc = loss(out_train, masks_train)
-    # Jc.backward()
-    # optimizer.step()
-
-    values = evaluate(net, loss, images_train, masks_train, images_val, masks_val, my_iter, g0nrm)
-
-    history['values'] = torch.cat((history['values'], torch.tensor(values).reshape(1, -1)))
-
-    print(frmt.format(*values))
-
-    with torch.no_grad():
-        plot_mask(net(images_train)[10])
-        plt.title('iter =' + str(my_iter))
-        plt.show()
+seed_everything(42)
+p = extract_data(net, 'data')
+p_opt, info = optimizer.solve(f, p, images_train, masks_train, show_mask_plots=True)
