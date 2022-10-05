@@ -36,8 +36,8 @@ class MRIPituitaryDataset(Dataset):
             a = idx
             b = idx + 1
         else:
-            a = idx.start
-            b = idx.stop
+            a = idx.start if idx.start is not None else 0
+            b = idx.stop if idx.stop is not None else self.__len__()
 
         for i in range(a, b):
             # img_path = os.path.join(self.img_dir, self.img_names[3 * i])
@@ -118,5 +118,7 @@ if __name__ == "__main__":
         transforms.Normalize((0.1307,), (0.3081,))
     ])
 
-    my_data2 = MRIPituitaryDataset(img_dir, transform=transform)
-    sample2 = my_data2[0:3]
+    target_transform = transforms.ToTensor()
+
+    my_data2 = MRIPituitaryDataset(img_dir, transform=transform, target_transform=target_transform)
+    sample2 = my_data2[:3]
