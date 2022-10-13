@@ -84,16 +84,16 @@ class MRIPituitaryDataset(Dataset):
         if self.transform:
             images2 = ()
             for i in range(images.shape[0]):
-                images2 += (self.transform(images[i]).unsqueeze(0),)
+                images2 += (self.transform(images[i]),)
 
             images = torch.cat(images2, dim=0)
 
         if self.target_transform:
             masks2 = ()
             for i in range(images.shape[0]):
-                masks2 += (self.target_transform(masks[i]).unsqueeze(0),)
+                masks2 += (self.target_transform(masks[i]),)
 
-            masks = torch.cat(masks2)
+            masks = torch.cat(masks2).float()
 
         sample = (images, masks)
         return sample
@@ -122,3 +122,7 @@ if __name__ == "__main__":
 
     my_data2 = MRIPituitaryDataset(img_dir, transform=transform, target_transform=target_transform)
     sample2 = my_data2[:3]
+
+    # check data loader
+    train_loader = torch.utils.data.DataLoader(my_data2, batch_size=5)
+
