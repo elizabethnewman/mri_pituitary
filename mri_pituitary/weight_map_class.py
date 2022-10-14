@@ -32,10 +32,10 @@ class WeightMap(nn.Module):
         d2 = torch.zeros_like(x)
         for i in range(x.shape[1]):
             # 1's represent inside class, 0's represent outside class
-            y1 = distance_transform_edt(x[:, i].detach().numpy())
+            y1 = distance_transform_edt(x[:, i].cpu().detach().numpy())
             d1[:, i] = torch.tensor(y1, **factory_kwargs)
 
-            y2 = distance_transform_edt(x[:, i].detach().numpy(), sampling=2)
+            y2 = distance_transform_edt(x[:, i].cpu().detach().numpy(), sampling=2)
             d2[:, i] = torch.tensor(y2, **factory_kwargs)
 
         d = 1.0 * self.w0 * torch.exp(-0.5 * ((d1 + d2) / self.sigma) ** 2)
