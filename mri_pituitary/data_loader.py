@@ -74,8 +74,8 @@ class MRIPituitaryDataset(Dataset):
         masks = crop_img(masks, boxes)
 
         # normalize
-        images = normalize_image(images, self.nrm_type).astype(np.float32)
-        masks = masks.astype(int)
+        # images = normalize_image(images, self.nrm_type).astype(np.float32)
+        # masks = masks.astype(int)
 
         # permute to PyTorch orientation
         # images = images.transpose(0, 3, 1, 2)
