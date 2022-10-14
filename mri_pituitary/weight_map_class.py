@@ -13,7 +13,7 @@ class WeightMap(nn.Module):
     def forward(self, x):
         wc = self.calculate_weights(x)
         d = self.distance(x)
-        return wc + d
+        return (wc + d).to(device=x.device, dtype=x.dtype)
 
     def calculate_weights(self, x):
         num_pixels_per_class = x.sum(dim=(0, 2, 3), keepdim=True)
