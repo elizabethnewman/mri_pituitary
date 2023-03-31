@@ -5,9 +5,16 @@ from matplotlib.colors import ListedColormap
 def plot_mask(mask, axis=0, show_colorbar=True):
     # assume mask is of size C x H x W
     # https://riptutorial.com/matplotlib/example/20692/custom-discrete-colormap
-    cmap = ListedColormap(['red', 'green', 'blue', 'black'])
+
+    if mask.shape[0] == 4:
+        cmap = ListedColormap(['red', 'green', 'blue', 'black'])
+        vmax = 3
+    else:
+        cmap = ListedColormap(['white', 'black'])
+        vmax = 1
+
     mm = mask.argmax(axis=axis)
-    plt.imshow(mm, cmap=cmap, vmin=0, vmax=3)
+    plt.imshow(mm, cmap=cmap, vmin=0, vmax=vmax)
     plt.axis('off')
 
     if show_colorbar:
