@@ -9,7 +9,7 @@ setup(
     author='Elizabeth Newman',
     author_email='elizabeth.newman@emory.edu',
     description='',
-    install_requires=['numpy', 'torch>=2.0.0', 'torchvision==0.16', 'Pillow', 'opencv-python', 'albumentations',
+    install_requires=['numpy', 'torch', 'torchvision', 'Pillow', 'opencv-python', 'albumentations',
                       'matplotlib', 'pandas'],
     extras_require={'interactive': ['matplotlib']}
 )
